@@ -1,3 +1,38 @@
+# OS stuff
+###################
+.DS_Store
+
+# Intellij
+###################
+.idea
+*.iml
+
+# Eclipse #
+###########
+.project
+.settings
+.classpath
+# reverting this as e.g. /distribution/feature-packs/server-feature-pack/src/main/resources/content/bin/
+# should not be ignored
+#bin/
+.factorypath
+
+
+# NetBeans #
+############
+nbactions.xml
+nb-configuration.xml
+catalog.xml
+nbproject
+
+# VS Code #
+###########
+*.code-workspace
+
+# Maven #
+#########
+target
+
 # Compiled class file
 *.class
 
@@ -21,3 +56,4 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
