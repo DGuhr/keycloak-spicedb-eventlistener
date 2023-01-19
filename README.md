@@ -3,8 +3,9 @@ An event listener for Keycloak, creating spiceDB relationship data for keycloak 
 
 Inspired by [this](https://github.com/embesozzi/keycloak-openfga-event-listener) implementation for openFGA
 
+:warning::warning::warning:
 **warning** 
-This is a highly experimental WIP PoC for now, so use at your own risk and definitely nowhere near production. It may likely be that it gets abandoned shortly. :warning:
+This is a highly experimental WIP PoC for now, so use at your own risk and definitely nowhere near production. It may likely be that it gets abandoned shortly. :warning: :warning: :warning:
 
 
 # try it out:
