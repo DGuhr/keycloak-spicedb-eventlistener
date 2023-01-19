@@ -177,6 +177,8 @@ public class SpiceDbEventParser {
             /*case REALM_ROLE_MAPPING:
             case REALM_ROLE:
                 return OBJECT_TYPE_ROLE;*/
+            case USER:
+                return OBJECT_TYPE_USER; //TODO
             case GROUP_MEMBERSHIP:
                 return OBJECT_TYPE_GROUP;
             default:
@@ -257,15 +259,15 @@ public class SpiceDbEventParser {
         return getEventResourceName().equalsIgnoreCase(EVT_RESOURCE_GROUPS);
     }
 
-    public String getEventObjectId() {
+    public String getEventObjectId() { //todo: generalize to use with different arguments in different strategy impls.
         return getObjectByAttributeName("id");
     }
 
-    public String getEventObjectName() {
+    public String getEventObjectName() { //todo: generalize to use with different arguments in different strategy impls.
         return getObjectByAttributeName("name");
     }
 
-    private String getObjectByAttributeName(String attributeName) {
+    private String getObjectByAttributeName(String attributeName) { //TODO this does not work for every event type. users have "username" etc...
         ObjectMapper mapper = new ObjectMapper();
         String representation = event.getRepresentation().replaceAll("\\\\", "");
         try {
