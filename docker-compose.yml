@@ -3,12 +3,12 @@ version: '3'
 volumes:
   postgres_data:
     driver: local
-  caddy_data:
+  sdb_postgres_data:
     driver: local
 
 services:
   postgres:
-    image: postgres:11
+    image: postgres:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -178,9 +178,11 @@ services:
       - "sdb-database"
 
   sdb-database:
-    image: "postgres"
+    image: postgres:latest
     ports:
       - "5432:5432"
+    volumes:
+      - sdb_postgres_data:/var/lib/postgresql/data
     environment:
       - "POSTGRES_PASSWORD=secret"
       - "POSTGRES_DB=spicedb"
