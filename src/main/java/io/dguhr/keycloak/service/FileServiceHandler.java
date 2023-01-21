@@ -9,8 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -28,7 +26,7 @@ public class FileServiceHandler extends ServiceHandler {
     }
 
     @Override
-    public void handle(String eventId, String eventValue) throws ExecutionException, InterruptedException, TimeoutException {
+    public void handle(String eventId, String eventValue) {
         if (eventValue.equals("")) {
            logger.info("no processable event, idling...");
            return;
