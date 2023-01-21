@@ -1,9 +1,8 @@
 package io.dguhr.keycloak.service;
 
+import io.dguhr.keycloak.event.SpiceDbTupleEvent;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public abstract class ServiceHandler {
 
@@ -15,7 +14,7 @@ public abstract class ServiceHandler {
         this.config = config;
     }
 
-    public abstract void handle(String eventID, String eventValue)  throws ExecutionException, InterruptedException, TimeoutException;
+    public abstract void handle(String eventID, SpiceDbTupleEvent eventValue);
 
     public abstract void validateConfig();
 

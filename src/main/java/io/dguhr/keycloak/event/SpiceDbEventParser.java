@@ -46,9 +46,9 @@ public class SpiceDbEventParser {
      *  group
      *   |_ assignee     --> user   == Keycloak User Group Role Assignment
      */
-    public String toTupleEvent() {
+    public SpiceDbTupleEvent toTupleEvent() {
         if(getEventOperation().equals("")) {
-            return "";
+            return null;
         }
 
         // Get all the required information from the KC event
@@ -88,7 +88,9 @@ public class SpiceDbEventParser {
 
         UserModel user = getUserByUserId(evtUserId);
 
-        return writeSpiceDbRelationship(evtUserId, evtObjectId, permissionService, user);
+        //return writeSpiceDbRelationship(evtUserId, evtObjectId, permissionService, user);
+        return new SpiceDbTupleEvent(); //TODO: untangle. for users and groups, based on the kc event.
+
     }
 
     private static String writeSpiceDbRelationship(String evtUserId, String evtObjectId, PermissionsServiceGrpc.PermissionsServiceBlockingStub permissionService, UserModel user) {
