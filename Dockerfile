@@ -10,5 +10,12 @@ FROM quay.io/keycloak/keycloak:20.0.3
 
 COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
 COPY --from=builder /opt/keycloak/providers/ /opt/keycloak/providers/
+COPY ./initialize-poc.sh /opt/keycloak/bin
+COPY ./init.sh /opt/keycloak/bin
 
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "--debug","start-dev"]
+USER root
+RUN chmod -R 554 /opt/keycloak/bin/initialize-poc.sh
+RUN chmod -R 554 /opt/keycloak/bin/init.sh
+
+USER 1000
+ENTRYPOINT ["/opt/keycloak/bin/init.sh"]

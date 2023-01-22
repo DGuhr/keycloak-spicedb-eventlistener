@@ -1,16 +1,16 @@
 version: '3'
 
 volumes:
-  postgres_data:
+  kc_postgres_data:
     driver: local
   sdb_postgres_data:
     driver: local
 
 services:
-  postgres:
+  kc_postgres:
     image: postgres:latest
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - kc_postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -25,7 +25,7 @@ services:
       KEYCLOAK_PASSWORD: password
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: password
-      KC_DB_URL_HOST: postgres
+      KC_DB_URL_HOST: kc_postgres
       KC_DB_URL_DATABASE: keycloak
       KC_DB_SCHEMA: public
       KC_DB_USERNAME: keycloak
@@ -46,8 +46,9 @@ services:
       - 8080:8080
       - 8443:8443
       - 8787:8787 # debug
+   # entrypoint: ["/opt/keycloak/bin/kc.sh", "--debug","start-dev"]
     depends_on:
-      - postgres
+      - kc_postgres
       - spicedb
     networks:
       default:
