@@ -21,14 +21,17 @@ function wait_for_keycloak() {
     fi
   done
 
-  echo "${host_url} is now up and running. Continuing to setup keycloak using kcadm.sh..."
+  echo "${host_url} is now up and running. Waiting 10s for a remote debugger to connect..."
+  sleep 10
+
+  echo "Continuing setup using kcadm.sh..."
 }
 
 # Waiting for Keycloak to start before proceeding with the configurations.
 wait_for_keycloak
 
 #then start kcadm.sh
-echo "Connecting kcadm.sh..."
+echo "Connecting kcadm.sh to local keycloak instance..."
 
 /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 

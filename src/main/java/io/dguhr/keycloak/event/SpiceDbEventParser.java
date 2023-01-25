@@ -25,11 +25,11 @@ public class SpiceDbEventParser {
     public static final String OBJECT_TYPE_USER = "user";
     public static final String OBJECT_TYPE_ROLE = "role";
     public static final String OBJECT_TYPE_GROUP = "group";
-
-    private AdminEvent event;
-    private KeycloakSession session;
-
     private static final Logger logger = Logger.getLogger(SpiceDbEventParser.class);
+
+    private final AdminEvent event;
+    private final KeycloakSession session;
+
 
     public SpiceDbEventParser(AdminEvent event, KeycloakSession session) {
         this.event = event;
@@ -58,42 +58,36 @@ public class SpiceDbEventParser {
         String evtObjectId = getEventObjectName();
         String evtOrgId = getOrgIdByUserId(evtUserId);
 
+        logger.info("[SpiceDbEventListener] KC EVENT IS: " + event.getOperationType());
         logger.info("[SpiceDbEventListener] TYPE OF EVENT IS: " + event.getResourceTypeAsString());
         logger.info("[SpiceDbEventListener] ORG ID FOR USER IN EVENT IS: " + evtOrgId);
         logger.info("[SpiceDbEventListener] EVENTS definition IS: " + evtObjType);
-        //logger.info("[SpiceDbEventListener] EVENTS user type IS: " + evtUserType);
+        logger.info("[SpiceDbEventListener] EVENTS user type IS: " + evtUserType);
         logger.info("[SpiceDbEventListener] EVENTS user ID IS: " + evtUserId);
         logger.info("[SpiceDbEventListener] EVENTS group value ID IS: " + evtObjectId);
         logger.info("[SpiceDbEventListener] EVENT representation is: " + event.getRepresentation());
 
-        //TODO use the spicedb client
-        // Check if the type (objectType) and object (userType) is present in the authorization model
-        // So far, every relation between the type and the object is UNIQUE
-        // perhaps add this check and create it using the API if not exist?
-        //ObjectRelation objectRelation = model.filterByType(evtObjType).filterByObject(evtUserType);
+        return new SpiceDbTupleEventBuilder()
+                    .subject(new SpiceDbSubject().subjectType("bar").subjectValue("baz"))
+                    .relation(new SpiceDbRelation().relation("foo"))
+                    .object(new SpiceDbObject().objectType("zab").objectValue("zib"))
+                    .orgId(evtOrgId)
+                    .isOrgAdmin(false) //for now always false, TODO: look at later...
+                .build();
+
+    }
+
+    private String writeSpiceDbRelationship(String evtUserId, String evtObjectId) {
+        UserModel user = getUserByUserId(evtUserId);
 
         ManagedChannel channel = ManagedChannelBuilder
                 .forTarget("host.docker.internal:50051") // TODO: create local setup and make it configurable
                 .usePlaintext() // if not using TLS, replace with .usePlaintext()
                 .build();
 
-        SchemaServiceGrpc.SchemaServiceBlockingStub schemaService = SchemaServiceGrpc.newBlockingStub(channel)
-                .withCallCredentials(new BearerToken("12345"));
-        String schema = getInitialSchema();
-
         PermissionsServiceGrpc.PermissionsServiceBlockingStub permissionService = PermissionsServiceGrpc.newBlockingStub(channel)
                 .withCallCredentials(new BearerToken("12345")); //TODO configurable
 
-        SchemaServiceOuterClass.ReadSchemaResponse schemaResponse = getOrCreateSchema(schemaService); //TODO refactor, maybe idempotent updates are a thing
-
-        UserModel user = getUserByUserId(evtUserId);
-
-        //return writeSpiceDbRelationship(evtUserId, evtObjectId, permissionService, user);
-        return new SpiceDbTupleEvent(); //TODO: untangle. for users and groups, based on the kc event.
-
-    }
-
-    private static String writeSpiceDbRelationship(String evtUserId, String evtObjectId, PermissionsServiceGrpc.PermissionsServiceBlockingStub permissionService, UserModel user) {
         PermissionService.WriteRelationshipsRequest req = PermissionService.WriteRelationshipsRequest.newBuilder().addUpdates(
                         Core.RelationshipUpdate.newBuilder()
                                 .setOperation(Core.RelationshipUpdate.Operation.OPERATION_CREATE)
@@ -128,7 +122,17 @@ public class SpiceDbEventParser {
         return writeRelationResponse.getWrittenAt().getToken();
     }
 
-    private static SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema(SchemaServiceGrpc.SchemaServiceBlockingStub schemaService) {
+    private static SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema() {
+
+        ManagedChannel channel = ManagedChannelBuilder
+                .forTarget("host.docker.internal:50051") // TODO: create local setup and make it configurable
+                .usePlaintext() // if not using TLS, replace with .usePlaintext()
+                .build();
+
+        SchemaServiceGrpc.SchemaServiceBlockingStub schemaService = SchemaServiceGrpc.newBlockingStub(channel)
+                .withCallCredentials(new BearerToken("12345"));
+        String schema = getInitialSchema();
+
         SchemaServiceOuterClass.ReadSchemaRequest readRequest = SchemaServiceOuterClass.ReadSchemaRequest
                 .newBuilder()
                 .build();
@@ -143,8 +147,7 @@ public class SpiceDbEventParser {
                 logger.warn("No scheme there yet, creating initial one.");
                 writeSchema(schemaService, getInitialSchema());
             }
-            return getOrCreateSchema(schemaService);
-
+            return getOrCreateSchema();
         }
         logger.info("Scheme found: " + readResponse.getSchemaText());
         return readResponse;

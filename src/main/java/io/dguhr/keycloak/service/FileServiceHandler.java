@@ -1,5 +1,6 @@
 package io.dguhr.keycloak.service;
 
+import io.dguhr.keycloak.event.SpiceDbTupleEvent;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
@@ -26,7 +27,7 @@ public class FileServiceHandler extends ServiceHandler {
     }
 
     @Override
-    public void handle(String eventId, String eventValue) {
+    public void handle(String eventId, SpiceDbTupleEvent eventValue) {
         if (eventValue.equals("")) {
            logger.info("no processable event, idling...");
            return;

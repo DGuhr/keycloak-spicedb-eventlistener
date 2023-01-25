@@ -9,15 +9,17 @@ public class SpiceDbSubject {
         return subjectType;
     }
 
-    public void setSubjectType(String subjectType) {
+    public SpiceDbSubject subjectType(String subjectType) {
         this.subjectType = subjectType;
+        return this;
     }
 
     public String getSubjectValue() {
         return subjectValue;
     }
 
-    public void setSubjectValue(String subjectValue) {
+    public SpiceDbSubject subjectValue(String subjectValue) {
         this.subjectValue = subjectValue;
+        return this;
     }
 }
