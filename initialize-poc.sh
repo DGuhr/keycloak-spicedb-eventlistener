@@ -35,10 +35,12 @@ echo "Connecting kcadm.sh to local keycloak instance..."
 
 /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
-echo "Success! Now adding spicedb-events to master-realm..."
+echo "Success! Now adding spicedb-events to master-realm and initializing scheme..."
 /opt/keycloak/bin/kcadm.sh update events/config -r master -s 'eventsListeners=["jboss-logging","spicedb-events"]'
 
-echo "Success! Now adding users to master-realm including org_id field..."
+sleep 5
+echo "Success! Also waited 5 seconds to allow initializing the spiceDB schema."
+echo "Now adding users to master-realm including org_id field..."
 # Users
 /opt/keycloak/bin/kcadm.sh create users -r master -s username=paula -s firstName=Paula -s lastName=Von -s enabled=true -s email=paula@demo.com -s "attributes.org_id=12345"
 /opt/keycloak/bin/kcadm.sh set-password -r master --username paula --new-password demo1234!

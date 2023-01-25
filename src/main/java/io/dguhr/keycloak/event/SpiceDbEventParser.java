@@ -3,8 +3,6 @@ package io.dguhr.keycloak.event;
 import com.authzed.api.v1.Core;
 import com.authzed.api.v1.PermissionService;
 import com.authzed.api.v1.PermissionsServiceGrpc;
-import com.authzed.api.v1.SchemaServiceGrpc;
-import com.authzed.api.v1.SchemaServiceOuterClass;
 import com.authzed.grpcutil.BearerToken;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -120,54 +118,6 @@ public class SpiceDbEventParser {
         }
         logger.info("writeRelationResponse: " + writeRelationResponse);
         return writeRelationResponse.getWrittenAt().getToken();
-    }
-
-    private static SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema() {
-
-        ManagedChannel channel = ManagedChannelBuilder
-                .forTarget("host.docker.internal:50051") // TODO: create local setup and make it configurable
-                .usePlaintext() // if not using TLS, replace with .usePlaintext()
-                .build();
-
-        SchemaServiceGrpc.SchemaServiceBlockingStub schemaService = SchemaServiceGrpc.newBlockingStub(channel)
-                .withCallCredentials(new BearerToken("12345"));
-        String schema = getInitialSchema();
-
-        SchemaServiceOuterClass.ReadSchemaRequest readRequest = SchemaServiceOuterClass.ReadSchemaRequest
-                .newBuilder()
-                .build();
-
-        SchemaServiceOuterClass.ReadSchemaResponse readResponse;
-
-        try {
-            readResponse = schemaService.readSchema(readRequest);
-        } catch (Exception e) {
-            //ugly but hey..
-            if(e.getMessage().contains("No schema has been defined")) {
-                logger.warn("No scheme there yet, creating initial one.");
-                writeSchema(schemaService, getInitialSchema());
-            }
-            return getOrCreateSchema();
-        }
-        logger.info("Scheme found: " + readResponse.getSchemaText());
-        return readResponse;
-    }
-
-    private static String writeSchema(SchemaServiceGrpc.SchemaServiceBlockingStub schemaService, String schema) {
-        SchemaServiceOuterClass.WriteSchemaRequest request = SchemaServiceOuterClass.WriteSchemaRequest
-                .newBuilder()
-                .setSchema(schema)
-                .build();
-
-        SchemaServiceOuterClass.WriteSchemaResponse writeSchemaResponse;
-        try {
-            writeSchemaResponse = schemaService.writeSchema(request);
-        } catch (Exception e) {
-            logger.warn("WriteSchemaRequest failed", e);
-            throw new RuntimeException(e);
-        }
-        logger.info("writeSchemaResponse: " + writeSchemaResponse.toString());
-        return null;
     }
 
     /**
@@ -314,14 +264,5 @@ public class SpiceDbEventParser {
             sb.append(event.getError());
         }
         return sb.toString();
-    }
-
-    private static String getInitialSchema() {
-        return "definition thelargeapp/group {\n" +
-                "  relation direct_member: thelargeapp/user\n" +
-                "  relation admin: thelargeapp/user\n" +
-                "  permission member = direct_member + admin\n" +
-                "}\n" +
-                "definition thelargeapp/user {}";
     }
 }
