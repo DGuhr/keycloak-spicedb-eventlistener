@@ -2,7 +2,7 @@ package io.dguhr.keycloak.event;
 
 public class SpiceDbTupleEvent {
 
-    private SpiceDbObject resource;
+    private SpiceDbObject object;
 
     private SpiceDbRelation relation;
 
@@ -14,10 +14,10 @@ public class SpiceDbTupleEvent {
 
     private boolean isOrgAdmin;
 
-    public SpiceDbTupleEvent(SpiceDbObject resource, SpiceDbRelation relation,
+    public SpiceDbTupleEvent(SpiceDbObject object, SpiceDbRelation relation,
                              SpiceDbSubject subject, EventOperation operation,
                              String orgId, boolean isOrgAdmin) {
-        this.resource = resource;
+        this.object = object;
         this.relation = relation;
         this.subject = subject;
         this.operation = operation;
@@ -25,51 +25,57 @@ public class SpiceDbTupleEvent {
         this.isOrgAdmin = isOrgAdmin;
     }
 
-    public SpiceDbObject getResource() {
-        return resource;
+    public SpiceDbObject getObject() {
+        return object;
     }
 
-    public void setResource(SpiceDbObject resource) {
-        this.resource = resource;
+    public SpiceDbTupleEvent object(SpiceDbObject object) {
+        this.object = object;
+        return this;
     }
 
     public SpiceDbRelation getRelation() {
         return relation;
     }
 
-    public void setRelation(SpiceDbRelation relation) {
+    public SpiceDbTupleEvent relation(SpiceDbRelation relation) {
         this.relation = relation;
+        return this;
     }
 
     public SpiceDbSubject getSubject() {
         return subject;
     }
 
-    public void setSubject(SpiceDbSubject subject) {
+    public SpiceDbTupleEvent subject(SpiceDbSubject subject) {
         this.subject = subject;
+        return this;
     }
 
     public EventOperation getOperation() {
         return operation;
     }
 
-    public void operation(EventOperation operation) {
+    public SpiceDbTupleEvent operation(EventOperation operation) {
         this.operation = operation;
+        return this;
     }
 
     public String getOrgId() {
         return orgId;
     }
 
-    public void orgId(String orgId) {
+    public SpiceDbTupleEvent orgId(String orgId) {
         this.orgId = orgId;
+        return this;
     }
 
     public boolean getIsOrgAdmin() {
         return isOrgAdmin;
     }
 
-    public void isOrgAdmin(boolean orgAdmin) {
+    public SpiceDbTupleEvent isOrgAdmin(boolean orgAdmin) {
         isOrgAdmin = orgAdmin;
+        return this;
     }
 }

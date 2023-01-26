@@ -9,8 +9,9 @@ public class ServiceHandlerFactory {
         switch (serviceName) {
             case ("FILE"):
                 return new FileServiceHandler(session, config);
-            case ("SPICEDB"):
+            case ("SPICEDB"): {
                 return new SpiceDbServiceHandler(session, config);
+            }
             case ("KAFKA"):
                 throw new IllegalArgumentException("This service has not been implemented yet... " + serviceName);
             case ("HTTP_CLIENT"):
