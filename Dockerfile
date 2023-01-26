@@ -18,4 +18,3 @@ RUN chmod -R 554 /opt/keycloak/bin/initialize-poc.sh
 RUN chmod -R 554 /opt/keycloak/bin/init.sh
 
 USER 1000
-ENTRYPOINT ["/opt/keycloak/bin/init.sh"]
