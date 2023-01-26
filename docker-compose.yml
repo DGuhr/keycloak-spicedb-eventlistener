@@ -48,7 +48,7 @@ services:
       - 8080:8080
       - 8443:8443
       - 8787:8787 # debug
-   # entrypoint: ["/opt/keycloak/bin/kc.sh", "--debug","start-dev"]
+    entrypoint: ["/opt/keycloak/bin/init.sh"]
     depends_on:
       - kc_postgres
       - spicedb
