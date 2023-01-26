@@ -14,6 +14,8 @@ import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
 
+import java.util.concurrent.TimeUnit;
+
 public class SpiceDbServiceHandler extends ServiceHandler {
     private static final Logger logger = Logger.getLogger(SpiceDbServiceHandler.class);
 
@@ -35,7 +37,7 @@ public class SpiceDbServiceHandler extends ServiceHandler {
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDUSER)) {
             logger.info("HANDLE:: add user..");
-            addUser();
+            addUser(sdbEvent);
         }
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDGROUP)) {
@@ -50,8 +52,8 @@ public class SpiceDbServiceHandler extends ServiceHandler {
         //TODO
     }
 
-    private void addUser() {
-        //TODO
+    private void addUser(SpiceDbTupleEvent sdbEvent) {
+       writeSpiceDbRelationship(sdbEvent);
     }
 
     private void addGroupMember() {
@@ -85,8 +87,17 @@ public class SpiceDbServiceHandler extends ServiceHandler {
                 throw new RuntimeException("connection to spicedb not available.");
             }
             return getOrCreateSchema();
+        } finally {
+            channel.shutdown();
+            try {
+                if (!channel.awaitTermination(3000, TimeUnit.MILLISECONDS)) {
+                    channel.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                channel.shutdownNow();
+            }
         }
-        logger.info("Scheme found: " + readResponse.getSchemaText());
+        logger.info("Scheme found.");
         return readResponse;
     }
 
@@ -133,7 +144,7 @@ public class SpiceDbServiceHandler extends ServiceHandler {
     private String writeSpiceDbRelationship(SpiceDbTupleEvent sdbEvent) {
 
         ManagedChannel channel = ManagedChannelBuilder
-                .forTarget(config.get("spicedbHost")+":"+config.get("spicedbPort"))
+                .forTarget(config.get("spicedbHost") + ":" + config.get("spicedbPort"))
                 .usePlaintext()
                 .build();
 
@@ -178,12 +189,23 @@ public class SpiceDbServiceHandler extends ServiceHandler {
 
         PermissionService.WriteRelationshipsResponse writeRelationResponse;
         try {
+            logger.info("Trying to write this stuff now...");
             writeRelationResponse = permissionService.writeRelationships(req);
         } catch (Exception e) {
             logger.warn("WriteRelationshipsRequest failed: ", e);
             return "";
+        } finally {
+            channel.shutdown();
+            try {
+                if (!channel.awaitTermination(3000, TimeUnit.MILLISECONDS)) {
+                    channel.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                channel.shutdownNow();
+            }
         }
-        logger.info("writeRelationResponse: " + writeRelationResponse);
+
+        logger.info("writeRelationshipResponse: " + writeRelationResponse);
         return writeRelationResponse.getWrittenAt().getToken();
     }
     @Override
