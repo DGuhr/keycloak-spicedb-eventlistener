@@ -9,4 +9,5 @@ public enum EventOperation {
     DELETEGROUP,
     ADDGROUPMEMBER,
     DELETEGROUPMEMBER,
+    NOT_HANDLED
 }

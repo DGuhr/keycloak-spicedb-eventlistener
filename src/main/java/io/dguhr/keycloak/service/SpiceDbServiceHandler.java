@@ -1,10 +1,12 @@
 package io.dguhr.keycloak.service;
 
+import com.authzed.api.v1.Core;
+import com.authzed.api.v1.PermissionService;
+import com.authzed.api.v1.PermissionsServiceGrpc;
 import com.authzed.api.v1.SchemaServiceGrpc;
 import com.authzed.api.v1.SchemaServiceOuterClass;
 import com.authzed.grpcutil.BearerToken;
 import io.dguhr.keycloak.event.EventOperation;
-import io.dguhr.keycloak.event.SpiceDbEventParser;
 import io.dguhr.keycloak.event.SpiceDbTupleEvent;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -17,20 +19,30 @@ public class SpiceDbServiceHandler extends ServiceHandler {
 
     public SpiceDbServiceHandler(KeycloakSession session, Config.Scope config) {
         super(session, config);
+        getOrCreateSchema();
     }
 
     @Override
     public void handle(String eventID, SpiceDbTupleEvent sdbEvent) {
+        if(sdbEvent.equals(EventOperation.NOT_HANDLED)) {
+            logger.info("HANDLE:: not handling.");
+        }
+
         if(sdbEvent.getOperation().equals(EventOperation.ADDGROUPMEMBER)) {
+            logger.info("HANDLE:: Add Group member..");
             addGroupMember();
         }
+
         if(sdbEvent.getOperation().equals(EventOperation.ADDUSER)) {
+            logger.info("HANDLE:: add user..");
             addUser();
         }
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDGROUP)) {
+            logger.info("HANDLE:: add user..");
             addGroup();
         }
+
     }
 
     private void addGroup() {
@@ -49,12 +61,12 @@ public class SpiceDbServiceHandler extends ServiceHandler {
     private SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema() {
 
         ManagedChannel channel = ManagedChannelBuilder
-                .forTarget("host.docker.internal:50051") // TODO: create local setup and make it configurable
-                .usePlaintext() // if not using TLS, replace with .usePlaintext()
+                .forTarget(config.get("spicedbHost") +":"+config.get("spicedbPort"))
+                .usePlaintext()
                 .build();
 
         SchemaServiceGrpc.SchemaServiceBlockingStub schemaService = SchemaServiceGrpc.newBlockingStub(channel)
-                .withCallCredentials(new BearerToken("12345"));
+                .withCallCredentials(new BearerToken(config.get("spicedbToken")));
 
         SchemaServiceOuterClass.ReadSchemaRequest readRequest = SchemaServiceOuterClass.ReadSchemaRequest
                 .newBuilder()
@@ -112,10 +124,66 @@ public class SpiceDbServiceHandler extends ServiceHandler {
                 "definition role {\n" +
                 "    relation assigned_group: group\n" +
                 "\n" +
-                "    permission member = assigned_group#member\n" +
+                "    permission member = assigned_group->member\n" +
                 "}";
     }
 
+    private String writeSpiceDbRelationship(SpiceDbTupleEvent sdbEvent) {
+
+        ManagedChannel channel = ManagedChannelBuilder
+                .forTarget(config.get("spicedbHost")+":"+config.get("spicedbPort"))
+                .usePlaintext()
+                .build();
+
+        PermissionsServiceGrpc.PermissionsServiceBlockingStub permissionService = PermissionsServiceGrpc.newBlockingStub(channel)
+                .withCallCredentials(new BearerToken(config.get("spicedbToken")));
+
+        PermissionService.WriteRelationshipsRequest req = PermissionService.WriteRelationshipsRequest.newBuilder().addUpdates(
+                        Core.RelationshipUpdate.newBuilder()
+                                .setOperation(Core.RelationshipUpdate.Operation.OPERATION_CREATE)
+                                .setRelationship(
+                                        Core.Relationship.newBuilder()
+                                                .setResource(
+                                                        Core.ObjectReference.newBuilder()
+                                                                .setObjectType(
+                                                                        sdbEvent
+                                                                                .getObject()
+                                                                                .getObjectType())
+                                                                .setObjectId(sdbEvent
+                                                                        .getObject()
+                                                                        .getObjectValue())
+                                                                .build())
+                                                .setRelation(sdbEvent
+                                                        .getRelation()
+                                                        .getRelationValue())
+                                                .setSubject(
+                                                        Core.SubjectReference.newBuilder()
+                                                                .setObject(
+                                                                        Core.ObjectReference.newBuilder()
+                                                                                .setObjectType(
+                                                                                        sdbEvent
+                                                                                        .getSubject()
+                                                                                        .getSubjectType())
+                                                                                .setObjectId(
+                                                                                        sdbEvent
+                                                                                        .getSubject()
+                                                                                        .getSubjectValue())
+                                                                                .build())
+                                                                .build())
+                                                .build())
+                                .build())
+                .build();
+
+        PermissionService.WriteRelationshipsResponse writeRelationResponse;
+        try {
+            writeRelationResponse = permissionService.writeRelationships(req);
+        } catch (Exception e) {
+            logger.warn("WriteRelationshipsRequest failed: ", e);
+            return "";
+        }
+        logger.info("writeRelationResponse: " + writeRelationResponse);
+        return writeRelationResponse.getWrittenAt().getToken();
+    }
     @Override
     public void validateConfig() {
         //not implemented yet

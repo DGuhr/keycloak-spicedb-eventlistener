@@ -4,7 +4,7 @@ public class SpiceDbRelation {
 
     private String relation;
 
-    public String getRelation() {
+    public String getRelationValue() {
         return relation;
     }
 

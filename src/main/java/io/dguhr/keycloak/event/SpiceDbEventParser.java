@@ -11,18 +11,65 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.ManagedChannelBuilder;
 import org.jboss.logging.Logger;
 import org.keycloak.events.admin.AdminEvent;
+import org.keycloak.events.admin.OperationType;
+import org.keycloak.events.admin.ResourceType;
 import org.keycloak.models.KeycloakSession;
 import io.grpc.ManagedChannel;
 import org.keycloak.models.UserModel;
 
+/**
+ * add user event representation
+ * DEBUG [org.keycloak.events] (executor-thread-6)
+ * operationType=CREATE,
+ * realmId=a88ae7e5-bad3-459a-83c3-958a7098f584,
+ * clientId=80463bd7-c175-486f-9796-6e271f29ebee,
+ * userId=ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c,
+ * ipAddress=172.17.0.1,
+ * resourceType=USER,
+ * resourcePath=users/37c0245d-793e-4b46-b9e9-6e7502ef1347
+ *
+ * Add group event rep
+ * DEBUG [org.keycloak.events] (executor-thread-7)
+ * operationType=CREATE,
+ * realmId=a88ae7e5-bad3-459a-83c3-958a7098f584,
+ * clientId=80463bd7-c175-486f-9796-6e271f29ebee,
+ * userId=ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c,
+ * ipAddress=172.17.0.1,
+ * resourceType=GROUP,
+ * resourcePath=groups/7ba3c729-a67b-4057-b38d-2f555512296b
+ *
+ * add user to group event rep
+ * DEBUG [org.keycloak.events] (executor-thread-10)
+ * operationType=CREATE,
+ * realmId=a88ae7e5-bad3-459a-83c3-958a7098f584,
+ * clientId=80463bd7-c175-486f-9796-6e271f29ebee,
+ * userId=ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c,
+ * ipAddress=172.17.0.1,
+ * resourceType=GROUP_MEMBERSHIP,
+ * resourcePath=users/37c0245d-793e-4b46-b9e9-6e7502ef1347/groups/7ba3c729-a67b-4057-b38d-2f555512296b
+ *
+ * add subgroup event rep (name foo)
+ * DEBUG [org.keycloak.events] (executor-thread-15)
+ * operationType=CREATE,
+ * realmId=a88ae7e5-bad3-459a-83c3-958a7098f584,
+ * clientId=80463bd7-c175-486f-9796-6e271f29ebee,
+ * userId=ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c,
+ * ipAddress=172.17.0.1,
+ * resourceType=GROUP,
+ * resourcePath=groups/7ba3c729-a67b-4057-b38d-2f555512296b/children
+ *
+ * add member to subgroup event rep (same as add to group)
+ * DEBUG [org.keycloak.events] (executor-thread-18)
+ * operationType=CREATE,
+ * realmId=a88ae7e5-bad3-459a-83c3-958a7098f584,
+ * clientId=80463bd7-c175-486f-9796-6e271f29ebee,
+ * userId=ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c,
+ * ipAddress=172.17.0.1,
+ * resourceType=GROUP_MEMBERSHIP,
+ * resourcePath=users/ff7d8d03-31c3-4c6b-8a6e-b1d82f96521c/groups/57227efa-2d22-41c6-b0fe-574af3f9a919
+ */
 public class SpiceDbEventParser {
 
-    public static final String EVT_RESOURCE_USERS = "users";
-    public static final String EVT_RESOURCE_GROUPS = "groups";
-    public static final String EVT_RESOURCE_ROLES_BY_ID = "roles-by-id";
-    public static final String OBJECT_TYPE_USER = "user";
-    public static final String OBJECT_TYPE_ROLE = "role";
-    public static final String OBJECT_TYPE_GROUP = "group";
     private static final Logger logger = Logger.getLogger(SpiceDbEventParser.class);
 
     private final AdminEvent event;
@@ -34,156 +81,82 @@ public class SpiceDbEventParser {
         this.session = session;
     }
 
-    /***
-     * Convert the Keycloak event to Event Tuple following the OpenFGA specs
-     * The OpenFGA authorization model is more complex, nevertheless, here is a simplified version of the Authorization Model that fit our requirements'
-     * role
-     *   |_ assignee     --> user   == Keycloak User Role Assignment
-     *   |_ parent_group --> group  == Keycloak Group Role Assignment
-     *   |_ parent       --> role   == Keycloak Role to Role Assignment
-     *  group
-     *   |_ assignee     --> user   == Keycloak User Group Role Assignment
-     */
     public SpiceDbTupleEvent toTupleEvent() {
-        if(getEventOperation().equals("")) {
-            return null;
+        var currentTupleEvent = new SpiceDbTupleEventBuilder().build();
+        var currentOperation = getEventOperation();
+        if(currentOperation.equals(EventOperation.NOT_HANDLED)) {
+            return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
         }
 
-        // Get all the required information from the KC event
-        String evtObjType = getEventObjectType();
-        String evtUserType = getEventUserType(); //rm
-        String evtUserId = evtUserType.equals(OBJECT_TYPE_ROLE) ? findRoleNameInRealm(getEventUserId()) : getEventUserId(); //rm
-        String evtObjectId = getEventObjectName();
-        String evtOrgId = getOrgIdByUserId(evtUserId);
-
-        logger.info("[SpiceDbEventListener] KC EVENT IS: " + event.getOperationType());
-        logger.info("[SpiceDbEventListener] TYPE OF EVENT IS: " + event.getResourceTypeAsString());
-        logger.info("[SpiceDbEventListener] ORG ID FOR USER IN EVENT IS: " + evtOrgId);
-        logger.info("[SpiceDbEventListener] EVENTS definition IS: " + evtObjType);
-        logger.info("[SpiceDbEventListener] EVENTS user type IS: " + evtUserType);
-        logger.info("[SpiceDbEventListener] EVENTS user ID IS: " + evtUserId);
-        logger.info("[SpiceDbEventListener] EVENTS group value ID IS: " + evtObjectId);
-        logger.info("[SpiceDbEventListener] EVENT representation is: " + event.getRepresentation());
-
-        return new SpiceDbTupleEventBuilder()
-                    .subject(new SpiceDbSubject().subjectType("bar").subjectValue("baz"))
-                    .relation(new SpiceDbRelation().relation("foo"))
-                    .object(new SpiceDbObject().objectType("zab").objectValue("zib"))
-                    .orgId(evtOrgId)
-                    .isOrgAdmin(false) //for now always false, TODO: look at later...
-                .build();
-
-    }
-
-    private String writeSpiceDbRelationship(String evtUserId, String evtObjectId) {
-        UserModel user = getUserByUserId(evtUserId);
-
-        ManagedChannel channel = ManagedChannelBuilder
-                .forTarget("host.docker.internal:50051") // TODO: create local setup and make it configurable
-                .usePlaintext() // if not using TLS, replace with .usePlaintext()
-                .build();
-
-        PermissionsServiceGrpc.PermissionsServiceBlockingStub permissionService = PermissionsServiceGrpc.newBlockingStub(channel)
-                .withCallCredentials(new BearerToken("12345")); //TODO configurable
-
-        PermissionService.WriteRelationshipsRequest req = PermissionService.WriteRelationshipsRequest.newBuilder().addUpdates(
-                        Core.RelationshipUpdate.newBuilder()
-                                .setOperation(Core.RelationshipUpdate.Operation.OPERATION_CREATE)
-                                .setRelationship(
-                                        Core.Relationship.newBuilder()
-                                                .setResource(
-                                                        Core.ObjectReference.newBuilder()
-                                                                .setObjectType("thelargeapp/group")
-                                                                .setObjectId(evtObjectId)
-                                                                .build())
-                                                .setRelation("direct_member")
-                                                .setSubject(
-                                                        Core.SubjectReference.newBuilder()
-                                                                .setObject(
-                                                                        Core.ObjectReference.newBuilder()
-                                                                                .setObjectType("thelargeapp/user")
-                                                                                .setObjectId(evtUserId + "_" + user.getUsername())
-                                                                                .build())
-                                                                .build())
-                                                .build())
-                                .build())
-                .build();
-
-        PermissionService.WriteRelationshipsResponse writeRelationResponse;
-        try {
-            writeRelationResponse = permissionService.writeRelationships(req);
-        } catch (Exception e) {
-            logger.warn("WriteRelationshipsRequest failed: ", e);
-            return "";
+        if(currentOperation.equals(EventOperation.ADDUSER)) {
+            //subject: org.
+            //relation: member.
+            //object: user.
+            var userId = getUserIdFromResourcePath();
+            var user = getUserByUserId(userId);
+            var orgId = getOrgIdForUser(user);
+            currentTupleEvent.orgId(orgId)
+                    .subject(new SpiceDbSubject()
+                            .subjectType("principal")
+                            .subjectValue(userId+"_"+user.getUsername()))
+                    .relation(new SpiceDbRelation()
+                            .relation("member"))
+                    .object(new SpiceDbObject()
+                            .objectType("tenant")
+                            .objectValue(orgId));
+            return currentTupleEvent;
         }
-        logger.info("writeRelationResponse: " + writeRelationResponse);
-        return writeRelationResponse.getWrittenAt().getToken();
+
+        return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
     }
 
-    /**
-     * Checks for group_membership events.
-     *
-     * @return object type or error
-     */
-    public String getEventObjectType() {
-        switch (event.getResourceType()) {
-            //remove roles from the game for now. TODO: check if wanted.
-            //case user: write user relation to spicedb. at best when assuming org_id = context then write orgid/user:value
-            /*case REALM_ROLE_MAPPING:
-            case REALM_ROLE:
-                return OBJECT_TYPE_ROLE;*/
-            case USER:
-                return OBJECT_TYPE_USER; //TODO
-            case GROUP_MEMBERSHIP:
-                return OBJECT_TYPE_GROUP;
-            default:
-                logger.info("Event is not handled, id:" + event.getId() + " resource name: " + event.getResourceType().name());
-                return "";
+    public String getOrgIdForUser(UserModel user) {
+        logger.info("Searching org_id for user: " + user.getUsername());
+        String orgId = user.getFirstAttribute("org_id");
+
+        if(orgId == null || orgId.isBlank()){
+            orgId = "default";
         }
-    }
 
-    public String getOrgIdByUserId(String userId) {
-        logger.info("Searching org_id for userId: " + userId);
-        String orgId = getUserByUserId(userId).getFirstAttribute("org_id");
-        logger.info("Found org_id: " + orgId + " for userId: " + userId);
         return orgId;
     }
 
     /**
-     * perhaps rename to getEventSubjectType?
-     *
-     * @return
+     * Returns the intended operation by evaluating the incoming keycloak event
+     * @return the corresponding {@link EventOperation}, NOT_HANDLED indicates not handled (yet)
      */
-    public String getEventUserType() {
-        switch (getEventResourceName()) {
-            case EVT_RESOURCE_USERS:
-                return OBJECT_TYPE_USER;
-            case EVT_RESOURCE_GROUPS:
-                return OBJECT_TYPE_GROUP;
-            case EVT_RESOURCE_ROLES_BY_ID:
-                return OBJECT_TYPE_ROLE;
-            default:
-                //throw new IllegalArgumentException("Resource type is not handled: " + event.getOperationType());
-                logger.info("Event is not handled, id:" + event.getId() + " resource name: " + event.getResourceType().name());
-                return "";
+    public EventOperation getEventOperation() {
+
+        logger.info("received keycloak event with resourceType: " + event.getResourceTypeAsString() + " and operationType: " + event.getOperationType().toString());
+
+        if (isAddUserKcEvent()) {
+            return EventOperation.ADDUSER;
         }
+
+        //Note: child groups would have to come here, essentially the same event as add user to group, but instead resourcePath starts with groups and ends with children.
+        // look at later if needed...
+
+        if (isCreateGroupKcEvent()) {
+            return EventOperation.ADDGROUP;
+        }
+
+        if (isGroupMemberAddedEvent()) {
+            return EventOperation.ADDGROUPMEMBER;
+        }
+
+        return EventOperation.NOT_HANDLED;
     }
 
-    /**
-     * //TODO: eval + ext
-     *
-     * @return
-     */
-    public String getEventOperation() {
-        switch (event.getOperationType()) {
-            case CREATE:
-                return "writes";
-            case DELETE:
-                return "deletes";
-            default:
-                logger.info("Event is not handled, id:" + event.getId() + " resource name: " + event.getResourceType().name());
-                return "";
-        }
+    private boolean isGroupMemberAddedEvent() {
+        return event.getResourceType().equals(ResourceType.GROUP_MEMBERSHIP) && event.getOperationType().equals(OperationType.CREATE);
+    }
+
+    private boolean isCreateGroupKcEvent() {
+        return event.getResourceType().equals(ResourceType.GROUP) && event.getOperationType().equals(OperationType.CREATE);
+    }
+
+    private boolean isAddUserKcEvent() {
+        return event.getResourceType().equals(ResourceType.USER) && event.getOperationType().equals(OperationType.CREATE);
     }
 
     public String getEventAuthenticatedUserId() {
@@ -194,26 +167,14 @@ public class SpiceDbEventParser {
         return session.users().getUserById(session.getContext().getRealm(), userId);
     }
 
-    public String getEventUserId() {
+    public String getUserIdFromResourcePath() {
         return this.event.getResourcePath().split("/")[1];
     }
 
     public String getEventResourceName() {
         return this.event.getResourcePath().split("/")[0];
     }
-
-    public Boolean isUserEvent() {
-        return getEventResourceName().equalsIgnoreCase(EVT_RESOURCE_USERS);
-    }
-
-    public Boolean isRoleEvent() {
-        return getEventResourceName().equalsIgnoreCase(EVT_RESOURCE_ROLES_BY_ID);
-    }
-
-    public Boolean isGroupEvent() {
-        return getEventResourceName().equalsIgnoreCase(EVT_RESOURCE_GROUPS);
-    }
-
+    
     public String getEventObjectId() { //todo: generalize to use with different arguments in different strategy impls.
         return getObjectByAttributeName("id");
     }
