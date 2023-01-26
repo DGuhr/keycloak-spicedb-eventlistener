@@ -81,6 +81,8 @@ public class SpiceDbServiceHandler extends ServiceHandler {
             if(e.getMessage().contains("No schema has been defined")) {
                 logger.warn("No scheme there yet, creating initial one.");
                 logger.info(writeSchema(schemaService, getInitialSchema()));
+            } else {
+                throw new RuntimeException("connection to spicedb not available.");
             }
             return getOrCreateSchema();
         }
