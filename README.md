@@ -12,7 +12,7 @@ This is a highly experimental WIP PoC for now, so use at your own risk and defin
 
 1) mvn clean install
 2) docker compose up
-3) wait until the custom entrypoint script runs (users are automatically proivisioned using kcadm) - watch the logs :)
+3) wait until the custom entrypoint script runs (users are automatically provisioned using kcadm.sh) - watch the logs :)
 3) use e.g. [zed](https://github.com/authzed/zed) (the spicedb command line tool) to connect to the spiceDB instance and see that relations are written containing the username (form: userid_username) -> `zed context set first-dev-context :50051 "abcdefgh" --insecure` followed by `zed relationship read tenant` should output 3 members of 2 tenants, as defined in `initialize-poc.sh`
 
 
