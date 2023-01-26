@@ -11,10 +11,11 @@ This is a highly experimental WIP PoC for now, so use at your own risk and defin
 # try it out:
 
 1) mvn clean install
-2) docker build . -t dguhr/keycloak_spicedbtest
-3) docker compose up
+2docker compose up
+2) wait until the script runs (usera are automatically proivisioned)
+3) use e.g. zed (the spicedb command line tool) to connect to the spiceDB instance and see that relations are written containing the username (form: userid_username) -> `zed context set first-dev-context :50051 "abcdefgh" --insecure` followed by `zed relationship read tenant` should output 3 members of 2 tenants, as defined in `initialize-poc.sh`
 
-4) create users and groups in keycloak
-5) go to realm settings -> events and activate 'spicedb-events'
-6) add users to groups. 
-7) use e.g. zed (the spicedb command line tool) to connect to the spiceDB instance and see that relations are written containing the username (form: userid_username)
+
+# TODO:
+1) create groups event, group membership event.
+2) much more. as said highly experimental ;)
