@@ -14,7 +14,6 @@ public class SpiceDbEventListenerProviderFactory implements EventListenerProvide
 
 	private static final String PROVIDER_ID = "spicedb-events";
 	private static final String SPICEDB_HANDLER = "spicedb";
-	private SpiceDbEventListenerProvider instance;
 	private String serviceHandlerName;
 	private String spiceDbBearerToken;
 	private String spiceDbHost;
@@ -23,12 +22,9 @@ public class SpiceDbEventListenerProviderFactory implements EventListenerProvide
 
 	@Override
 	public EventListenerProvider create(KeycloakSession session) {
-		if (instance == null) {
-			ServiceHandler serviceHandler = ServiceHandlerFactory.create(serviceHandlerName, session, config);
-			serviceHandler.validateConfig();
-			instance = new SpiceDbEventListenerProvider(serviceHandler, session);
-		}
-		return instance;
+		ServiceHandler serviceHandler = ServiceHandlerFactory.create(serviceHandlerName, session, config);
+		serviceHandler.validateConfig();
+		return new SpiceDbEventListenerProvider(serviceHandler, session);
 	}
 
 	@Override
