@@ -35,8 +35,8 @@ echo "Connecting kcadm.sh to local keycloak instance..."
 
 /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
-echo "Success! Now adding spicedb-events to master-realm and initializing scheme..."
-/opt/keycloak/bin/kcadm.sh update events/config -r master -s 'eventsListeners=["jboss-logging","spicedb-events"]'
+echo "Success! Now adding test-events to master-realm and initializing scheme..."
+/opt/keycloak/bin/kcadm.sh update events/config -r master -s 'eventsListeners=["jboss-logging","test-events"]'
 
 sleep 5
 echo "Success! Also waited 5 seconds to allow initializing the spiceDB schema."

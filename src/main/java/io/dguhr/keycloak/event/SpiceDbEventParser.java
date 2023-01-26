@@ -1,20 +1,14 @@
 package io.dguhr.keycloak.event;
 
-import com.authzed.api.v1.Core;
-import com.authzed.api.v1.PermissionService;
-import com.authzed.api.v1.PermissionsServiceGrpc;
-import com.authzed.grpcutil.BearerToken;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.grpc.ManagedChannelBuilder;
 import org.jboss.logging.Logger;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.events.admin.OperationType;
 import org.keycloak.events.admin.ResourceType;
 import org.keycloak.models.KeycloakSession;
-import io.grpc.ManagedChannel;
 import org.keycloak.models.UserModel;
 
 /**
@@ -84,18 +78,22 @@ public class SpiceDbEventParser {
     public SpiceDbTupleEvent toTupleEvent() {
         var currentTupleEvent = new SpiceDbTupleEventBuilder().build();
         var currentOperation = getEventOperation();
+
         if(currentOperation.equals(EventOperation.NOT_HANDLED)) {
-            return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
+            return currentTupleEvent.operation(currentOperation);
         }
 
+        currentTupleEvent.operation(currentOperation);
+
         if(currentOperation.equals(EventOperation.ADDUSER)) {
-            //subject: org.
+            //subject: principal.
             //relation: member.
-            //object: user.
+            //object: org.
             var userId = getUserIdFromResourcePath();
             var user = getUserByUserId(userId);
             var orgId = getOrgIdForUser(user);
-            currentTupleEvent.orgId(orgId)
+            currentTupleEvent
+                    .orgId(orgId)
                     .subject(new SpiceDbSubject()
                             .subjectType("principal")
                             .subjectValue(userId+"_"+user.getUsername()))
@@ -107,6 +105,27 @@ public class SpiceDbEventParser {
             return currentTupleEvent;
         }
 
+        if(currentOperation.equals(EventOperation.ADDGROUPMEMBER)) {
+            //subject: principal.
+            //relation: direct_member.
+            //object: group.
+            var userId = getUserIdFromResourcePath();
+            var user = getUserByUserId(userId);
+            var groupId = getGroupIdFromResourcePath();
+            var group = session.groups().getGroupById(session.getContext().getRealm(), groupId);
+            var orgId = getOrgIdForUser(user);
+            currentTupleEvent
+                    .orgId(orgId)
+                    .subject(new SpiceDbSubject()
+                            .subjectType("principal")
+                            .subjectValue(groupId+"_"+group.getName()))
+                    .relation(new SpiceDbRelation()
+                            .relation("direct_member"))
+                    .object(new SpiceDbObject()
+                            .objectType("group")
+                            .objectValue(orgId));
+            return currentTupleEvent;
+        }
         return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
     }
 
@@ -171,16 +190,10 @@ public class SpiceDbEventParser {
         return this.event.getResourcePath().split("/")[1];
     }
 
-    public String getEventResourceName() {
-        return this.event.getResourcePath().split("/")[0];
-    }
-    
-    public String getEventObjectId() { //todo: generalize to use with different arguments in different strategy impls.
-        return getObjectByAttributeName("id");
-    }
-
-    public String getEventObjectName() { //todo: generalize to use with different arguments in different strategy impls.
-        return getObjectByAttributeName("name");
+    public String getGroupIdFromResourcePath() {
+        logger.info("name: " + getObjectByAttributeName("name"));
+        logger.info("event representation: "+ event.getRepresentation().replaceAll("\\\\", ""));
+        return this.event.getResourcePath().split("/")[3];
     }
 
     private String getObjectByAttributeName(String attributeName) { //TODO this does not work for every event type. users have "username" etc...
@@ -197,11 +210,6 @@ public class SpiceDbEventParser {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public String findRoleNameInRealm(String roleId) {
-        logger.debug("Finding role name by role id: " + roleId);
-        return session.getContext().getRealm().getRoleById(roleId).getName();
     }
 
     public String toString() {
