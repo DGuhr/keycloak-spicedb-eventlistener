@@ -55,7 +55,7 @@ public class SpiceDbServiceHandler extends ServiceHandler {
     }
 
     private void addGroupMember(SpiceDbTupleEvent sdbEvent) {
-        //TODO
+        writeSpiceDbRelationship(sdbEvent);
     }
 
     private SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema() {
@@ -80,7 +80,7 @@ public class SpiceDbServiceHandler extends ServiceHandler {
             //ugly but hey..
             if(e.getMessage().contains("No schema has been defined")) {
                 logger.warn("No scheme there yet, creating initial one.");
-                logger.info(writeSchema(schemaService, getInitialSchema()));
+                writeSchema(schemaService, getInitialSchema());
             } else {
                 throw new RuntimeException("connection to spicedb not available.");
             }

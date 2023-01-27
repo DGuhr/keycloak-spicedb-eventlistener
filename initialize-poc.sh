@@ -58,3 +58,9 @@ adminUid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=admin --f
 
 echo "Now that we simulate an orgs admin, we can let them create a group that should be set up under the tenant 12345 derived by the admins orgid"
 /opt/keycloak/bin/kcadm.sh create groups -r master -s name=MyGroup
+
+echo "ok now lets add a user to the previously created group... in order to do that we need the userId and the groupId."
+paulaUid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=paula --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+myGroupUid=$(/opt/keycloak/bin//kcadm.sh get groups -r master -q name=MyGroup --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+/opt/keycloak/bin/kcadm.sh update users/$paulaUid/groups/$myGroupUid -r master -s realm=demorealm -s userId=$paulaUid -s groupId=$myGroupUid -n
+

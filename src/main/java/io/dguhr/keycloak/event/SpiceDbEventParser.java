@@ -142,19 +142,15 @@ public class SpiceDbEventParser {
                     .orgId(orgId)
                     .subject(new SpiceDbSubject()
                             .subjectType("principal")
-                            .subjectValue(groupId+"_"+groupName))
+                            .subjectValue(userId+"_"+user.getUsername()))
                     .relation(new SpiceDbRelation()
                             .relation("direct_member"))
                     .object(new SpiceDbObject()
                             .objectType("group")
-                            .objectValue(orgId));
+                            .objectValue(groupId+"_"+groupName));
             return currentTupleEvent;
         }
         return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
-    }
-
-    private GroupModel getGroupByGroupId(String groupId) {
-        return session.groups().getGroupById(session.getContext().getRealm(), groupId);
     }
 
     public String getTenantIdForUser(UserModel user) {
