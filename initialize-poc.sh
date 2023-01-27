@@ -48,3 +48,13 @@ echo "Now adding users to master-realm including org_id field..."
 /opt/keycloak/bin/kcadm.sh set-password -r master --username peter --new-password demo1234!
 /opt/keycloak/bin/kcadm.sh create users -r master -s username=richard  -s firstName=Richard -s lastName=Miles -s enabled=true -s email=richard@demo.com -s "attributes.org_id=23456"
 /opt/keycloak/bin/kcadm.sh set-password -r master --username richard --new-password demo1234!
+
+echo "Now adding an org/ tenant id to the admin, needed for creating groups that are tied to an org (we need the orgid of the creating person there)"
+
+# adminUid, awk gets the plain id value from the get response, grep removes empty lines, tr -d removes doublequotes, sed removes leading whitespace.
+# Bash magic? not for me ;) happy if anyone can simplify this (without installing external tools such as jq)
+adminUid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=admin --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+/opt/keycloak/bin//kcadm.sh update users/$adminUid -s "attributes.org_id=12345"
+
+echo "Now that we simulate an orgs admin, we can let them create a group that should be set up under the tenant 12345 derived by the admins orgid"
+/opt/keycloak/bin/kcadm.sh create groups -r master -s name=MyGroup

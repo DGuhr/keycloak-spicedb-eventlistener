@@ -26,13 +26,13 @@ public class SpiceDbServiceHandler extends ServiceHandler {
 
     @Override
     public void handle(String eventID, SpiceDbTupleEvent sdbEvent) {
-        if(sdbEvent.equals(EventOperation.NOT_HANDLED)) {
+        if(sdbEvent.getOperation().equals(EventOperation.NOT_HANDLED)) {
             logger.info("HANDLE:: not handling.");
         }
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDGROUPMEMBER)) {
             logger.info("HANDLE:: Add Group member..");
-            addGroupMember();
+            addGroupMember(sdbEvent);
         }
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDUSER)) {
@@ -41,22 +41,20 @@ public class SpiceDbServiceHandler extends ServiceHandler {
         }
 
         if(sdbEvent.getOperation().equals(EventOperation.ADDGROUP)) {
-            logger.info("HANDLE:: add user..");
-            addGroup();
+            logger.info("HANDLE:: add group..");
+            addGroup(sdbEvent);
         }
-
     }
 
-    private void addGroup() {
-
-        //TODO
+    private void addGroup(SpiceDbTupleEvent sdbEvent) {
+        writeSpiceDbRelationship(sdbEvent);
     }
 
     private void addUser(SpiceDbTupleEvent sdbEvent) {
        writeSpiceDbRelationship(sdbEvent);
     }
 
-    private void addGroupMember() {
+    private void addGroupMember(SpiceDbTupleEvent sdbEvent) {
         //TODO
     }
 
@@ -119,19 +117,22 @@ public class SpiceDbServiceHandler extends ServiceHandler {
     }
 
     private static String getInitialSchema() {
+
         return "definition principal {}\n" +
                 "\n" +
                 "definition tenant {\n" +
-                "    relation member : principal \n" +
-                "    relation admin : principal\n" +
+                "    relation member : principal\n" +
+                "    relation tenant_admin : principal\n" +
+                "    permission admin = tenant_admin\n" +
                 "}\n" +
                 "\n" +
                 "definition group {\n" +
+                "    relation parent : tenant | group\n" +
                 "    relation direct_member : principal\n" +
                 "    relation group_admin : principal\n" +
                 "\n" +
-                "    permission member = direct_member + group_admin\n" +
-                "    permission admin = group_admin\n" +
+                "    permission member = direct_member + group_admin + parent->admin\n" +
+                "    permission admin = group_admin + parent->admin\n" +
                 "}\n" +
                 "\n" +
                 "definition role {\n" +

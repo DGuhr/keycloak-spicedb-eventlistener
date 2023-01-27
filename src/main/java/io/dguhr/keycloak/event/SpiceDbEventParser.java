@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.events.admin.OperationType;
 import org.keycloak.events.admin.ResourceType;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.UserModel;
 
@@ -85,15 +86,15 @@ public class SpiceDbEventParser {
 
         currentTupleEvent.operation(currentOperation);
 
-        if(currentOperation.equals(EventOperation.ADDUSER)) {
+        if (currentOperation.equals(EventOperation.ADDUSER)) {
             //subject: principal.
             //relation: member.
             //object: org.
             var userId = getUserIdFromResourcePath();
             var user = getUserByUserId(userId);
-            var orgId = getOrgIdForUser(user);
+            var tenantId = getTenantIdForUser(user);
             currentTupleEvent
-                    .orgId(orgId)
+                    .orgId(tenantId)
                     .subject(new SpiceDbSubject()
                             .subjectType("principal")
                             .subjectValue(userId+"_"+user.getUsername()))
@@ -101,7 +102,30 @@ public class SpiceDbEventParser {
                             .relation("member"))
                     .object(new SpiceDbObject()
                             .objectType("tenant")
-                            .objectValue(orgId));
+                            .objectValue(tenantId));
+            return currentTupleEvent;
+        }
+
+        if (currentOperation.equals(EventOperation.ADDGROUP)) {
+            //subject: tenant.
+            //relation: parent.
+            //object: group.
+            var groupId = getGroupIdFromKcEvent();
+            var groupName = getGroupNameFromKcEvent();
+
+            var userId = getUserIdForGroupCreateEvent(); //here we need the creating users org id to add the group under that org.
+            var user = getUserByUserId(userId);
+            var tenantId = getTenantIdForUser(user);
+            currentTupleEvent
+                    .orgId(tenantId)
+                    .subject(new SpiceDbSubject()
+                            .subjectType("tenant")
+                            .subjectValue(tenantId))
+                    .relation(new SpiceDbRelation()
+                            .relation("parent"))
+                    .object(new SpiceDbObject()
+                            .objectType("group")
+                            .objectValue(groupId+"_"+groupName));
             return currentTupleEvent;
         }
 
@@ -111,14 +135,14 @@ public class SpiceDbEventParser {
             //object: group.
             var userId = getUserIdFromResourcePath();
             var user = getUserByUserId(userId);
-            var groupId = getGroupIdFromResourcePath();
-            var group = session.groups().getGroupById(session.getContext().getRealm(), groupId);
-            var orgId = getOrgIdForUser(user);
+            var orgId = getTenantIdForUser(user);
+            var groupId = getGroupIdFromKcEvent();
+            var groupName = getGroupNameFromKcEvent();
             currentTupleEvent
                     .orgId(orgId)
                     .subject(new SpiceDbSubject()
                             .subjectType("principal")
-                            .subjectValue(groupId+"_"+group.getName()))
+                            .subjectValue(groupId+"_"+groupName))
                     .relation(new SpiceDbRelation()
                             .relation("direct_member"))
                     .object(new SpiceDbObject()
@@ -129,7 +153,11 @@ public class SpiceDbEventParser {
         return currentTupleEvent.operation(EventOperation.NOT_HANDLED);
     }
 
-    public String getOrgIdForUser(UserModel user) {
+    private GroupModel getGroupByGroupId(String groupId) {
+        return session.groups().getGroupById(session.getContext().getRealm(), groupId);
+    }
+
+    public String getTenantIdForUser(UserModel user) {
         logger.info("Searching org_id for user: " + user.getUsername());
         String orgId = user.getFirstAttribute("org_id");
 
@@ -190,13 +218,18 @@ public class SpiceDbEventParser {
         return this.event.getResourcePath().split("/")[1];
     }
 
-    public String getGroupIdFromResourcePath() {
-        logger.info("name: " + getObjectByAttributeName("name"));
-        logger.info("event representation: "+ event.getRepresentation().replaceAll("\\\\", ""));
-        return this.event.getResourcePath().split("/")[3];
+    public String getGroupIdFromKcEvent() {
+        return getValueFromEventByAttributeKey("id");
+    }
+    public String getGroupNameFromKcEvent() {
+        return getValueFromEventByAttributeKey("name");
     }
 
-    private String getObjectByAttributeName(String attributeName) { //TODO this does not work for every event type. users have "username" etc...
+    public String getUserIdForGroupCreateEvent() {
+        return event.getAuthDetails().getUserId();
+    }
+
+    private String getValueFromEventByAttributeKey(String attributeName) {
         ObjectMapper mapper = new ObjectMapper();
         String representation = event.getRepresentation().replaceAll("\\\\", "");
         try {
