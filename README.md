@@ -19,7 +19,7 @@ This is a highly experimental WIP PoC for now, so use at your own risk and defin
 
 
 # TODO:
-1much more. as said highly experimental, dunno where to go with this, but it's fun ;)
+much more. as said highly experimental, dunno where to go with this, but it's fun ;)
 
 # Done
 1) extended to (experimentally) handle "add group" events
