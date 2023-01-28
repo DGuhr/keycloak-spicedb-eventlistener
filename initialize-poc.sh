@@ -40,14 +40,8 @@ echo "Success! Now adding test-events to master-realm and initializing scheme...
 
 sleep 5
 echo "Success! Also waited 5 seconds to allow initializing the spiceDB schema."
-echo "Now adding users to master-realm including org_id field..."
-# Users
-/opt/keycloak/bin/kcadm.sh create users -r master -s username=paula -s firstName=Paula -s lastName=Von -s enabled=true -s email=paula@demo.com -s "attributes.org_id=12345"
-/opt/keycloak/bin/kcadm.sh set-password -r master --username paula --new-password demo1234!
-/opt/keycloak/bin/kcadm.sh create users -r master -s username=peter -s firstName=Peter -s lastName=Anderson -s enabled=true -s email=peter@demo.com -s "attributes.org_id=12345"
-/opt/keycloak/bin/kcadm.sh set-password -r master --username peter --new-password demo1234!
-/opt/keycloak/bin/kcadm.sh create users -r master -s username=richard  -s firstName=Richard -s lastName=Miles -s enabled=true -s email=richard@demo.com -s "attributes.org_id=23456"
-/opt/keycloak/bin/kcadm.sh set-password -r master --username richard --new-password demo1234!
+# echo "Now adding users to master-realm including org_id field. Thank you, ChatGPT... :-D"
+/opt/keycloak/bin/usergenerator.sh 10
 
 echo "Now adding an org/ tenant id to the admin, needed for creating groups that are tied to an org (we need the orgid of the creating person there)"
 
@@ -60,7 +54,7 @@ echo "Now that we simulate an orgs admin, we can let them create a group that sh
 /opt/keycloak/bin/kcadm.sh create groups -r master -s name=MyGroup
 
 echo "ok now lets add a user to the previously created group... in order to do that we need the userId and the groupId."
-paulaUid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=paula --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+user1Uid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=$username1 --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
 myGroupUid=$(/opt/keycloak/bin//kcadm.sh get groups -r master -q name=MyGroup --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
-/opt/keycloak/bin/kcadm.sh update users/$paulaUid/groups/$myGroupUid -r master -s realm=master -s userId=$paulaUid -s groupId=$myGroupUid -n
+/opt/keycloak/bin/kcadm.sh update users/$user1Uid/groups/$myGroupUid -r master -s realm=master -s userId=$user1Uid -s groupId=$myGroupUid -n
 

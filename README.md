@@ -24,3 +24,4 @@ much more. as said highly experimental, dunno where to go with this, but it's fu
 # Done
 1) extended to (experimentally) handle "add group" events
 2) extended to (experimentally) handle "group membership" events
+3) using ChatGPT to create myself a user generation script for keycloak. More about that [here](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/CHATGPT_GENERATOR.md))
