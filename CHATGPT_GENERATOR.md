@@ -99,3 +99,16 @@ I actually played around quite a bit with feeding ChatGPT with the schema refere
 
 Off bouldering,
 Dom
+
+#Update 1:
+Oh, dare you, bash! For sure the variables defined in the script are not made available to the calling script unless you use source! But luckily ChatGPT is a bash magician, so after a little fiddling - or lets say, crying for help... 
+``` 
+i have the following lines in my calling script that calls the script1.sh beforehand: 
+echo "Username 1 is set to ${username1}"
+user1Uid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=$username1 --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+The ${username1} echo returns an empty result. help
+```
+it gave me the actual correct response: use `source` you brat!
+![q_and_a7](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/q_and_a7.png?raw=true)
+
+So now it really works :) 
