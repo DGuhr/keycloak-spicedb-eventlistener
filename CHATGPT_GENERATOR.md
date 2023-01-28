@@ -70,7 +70,7 @@ Looking at the ChatGPT generated script, i didn't like the naming "org1", "org2"
 change the script so that the org_id values are numeric values with 12 digits 
 ```
 And it generated me the following script:
-![command_5a](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/command_5a.png?raw=true)
+![command_5a](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/command5a.png?raw=true)
 As you can see, I stopped the generation because I immediately saw ChatGPT followed my words too literally, because the intent was to still have only 3 distinct values. Well, no machine's perfect, so let's try again - but now also use only 8 digits, bc 12 may be a bit much (and randomly chosen, so who cares):
 ``` 
 change the script so that the org_id values are numeric values with 8 digits, but there would still be only 3 distinct values for all generated users
