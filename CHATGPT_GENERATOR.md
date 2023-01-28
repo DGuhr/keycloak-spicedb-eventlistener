@@ -1,7 +1,7 @@
 # Convince ChatGPT to do bash scripting for me
 
 ## The problem
-I freely admit it: **I don't like bash scripting.** Yes, it's out, bash scripting is my nemesis, i find these scripts are verbose and ugly for me, no types, just... go away. 
+I freely admit it: **I don't like bash scripting.** Yes, it's out, bash scripting is my nemesis, i find these scripts are verbose and ugly for me, no types, i forget what I did immediately, it's just... go away. Not for me. 
 
 Don't get me wrong, I usualy _**can**_ script in bash or any shell, but not without constant googling, headaches and urges to throw my laptop out of the window.
 
