@@ -54,4 +54,4 @@ and the answer was: yes. yes, sure! And I thought: Good machine!
 ![question3_p1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer3_p1.png?raw=true)
 
 And it even explained me the script:
-![question3_p2_command4](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/question3_p2_command4.png?raw=true)
+![question3_p2_command4](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer3_p2_command4.png?raw=true)
