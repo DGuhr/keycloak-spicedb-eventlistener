@@ -33,7 +33,7 @@ so the full example would be
 Create example kcadm commands for creating users and password for 10 users for me with random values for email, firstName, username, lastName, attributes.org_id and new-password 
 ```
 
-![prompt1 and answer_part_1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer1_p1.png?raw=true)
+![prompt1 and answer_part_1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer1_p1.png?raw=true)
 
 That answer contained only 7 answers, so... i "decently" said: hey ChatGPT, y u no 10?!
 
@@ -42,19 +42,19 @@ these ar eonly seven
 
 ```
 Also it was saturday morning, so i couldn't even type right. Well, things happen. Luckily ChatGPT had enough to do with us dumb humans so far, so it understood me and created the other 3 examples:
-![answer1_part2_and question2_answer2_part1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer1_p2_and_q2_a2_p1.png?raw=true)
+![answer1_part2_and question2_answer2_part1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer1_p2_and_q2_a2_p1.png?raw=true)
 
 Ok... I was interested, to be fair. Now it's still saturday, and I wanted to go bouldering and later there's this poetry slam, and generating example prompts took time, and so... could we make this even more generic? I asked simply:
 ```
 can you create a script that allows to add as much users as i want?
 ```
-![answer2_part1_and_question3](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer2_p2_question3.png?raw=true)
+![answer2_part1_and_question3](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer2_p2_question3.png?raw=true)
 
 and the answer was: yes. yes, sure! And I thought: Good machine!
-![question3_p1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer3_p1.png?raw=true)
+![question3_p1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer3_p1.png?raw=true)
 
 And it even explained me the script:
-![question3_p2_command4](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer3_p2_command4.png?raw=true)
+![question3_p2_command4](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer3_p2_command4.png?raw=true)
 
 but hey, totally random org_ids is a bit much, so boil them down to three. and also i want to call this script in a bigger context, so ChatGPT, make it parametrized:
 ``` 
@@ -62,23 +62,23 @@ make the script so that the org_id will only contain 3 distinct ids. Also, make 
 ```
 
 and ChatGPTs answer was: yeh, no problem!
-![answer4_p1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer4_p1.png?raw=true)
-![answer4_p2](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer4_p2.png?raw=true)
+![answer4_p1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer4_p1.png?raw=true)
+![answer4_p2](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer4_p2.png?raw=true)
 
 Looking at the ChatGPT generated script, i didn't like the naming "org1", "org2", "org3" so I wanted it to create numerical values instead:
 ``` 
 change the script so that the org_id values are numeric values with 12 digits 
 ```
 And it generated me the following script:
-![command_5a](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/command_5a.png?raw=true)
+![command_5a](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/command_5a.png?raw=true)
 As you can see, I stopped the generation because I immediately saw ChatGPT followed my words too literally, because the intent was to still have only 3 distinct values. Well, no machine's perfect, so let's try again - but now also use only 8 digits, bc 12 may be a bit much (and randomly chosen, so who cares):
 ``` 
 change the script so that the org_id values are numeric values with 8 digits, but there would still be only 3 distinct values for all generated users
 ```
 and here's the outcome:
-![command_5_and_answer5_part1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/command_5_and_a5_p1.png?raw=true)
+![command_5_and_answer5_part1](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/command_5_and_a5_p1.png?raw=true)
 and the explanation:
-![answer5_part2](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer5_p2.png?raw=true)
+![answer5_part2](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer5_p2.png?raw=true)
 
 So, I had to try this... simply removed my image using `docker compose down -v` followed by `docker rmi dguhr/keycloak_spicedbtest` and then `docker compose up` afterwards: It worked. exactly as intended. There was only one problem left: As per [the custom entrypoint script at that point in time](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/77875514d23956e5b689a4da87d4c4c8b438194f/initialize-poc.sh#L63), I use the usernames of the generated users in a later step to get their IDs when created, to add them to groups afterwards by their ID.
 
@@ -88,13 +88,14 @@ can you change it so that the username for each user is saved for subsequent cal
 ```
 
 and here's its answer:
-![answer6](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/assets/answer6.png?raw=true)
+![answer6](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/answer6.png?raw=true)
 
-So, what should I say? As you can seeTODO-ADD-PERMALINK-TO-SCRIPT-ON-MAIN when running this funny side project, it works like a charm. Timewise, this took around an hour to "create" and test, and another 45 min to write this blog post. 
+So, what should I say? As you can [see in the script](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/d19e1510faded97ff7ce46efbbd247cbe6fcfe17/initialize-poc.sh#L43-L44) when running this funny side project, the ChatGPT-created [usergenerator.sh](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/d19e1510faded97ff7ce46efbbd247cbe6fcfe17/usergenerator.sh) works like a charm. Timewise, this took around an hour to "create" and test, and another 45 min to write this blog post. 
 It may not have taken longer building it all on my own, but I would definitely not write this blog post then and be in a good mood.
 
 So... I am not saying it is perfect (the script doesn't even run on my machine because `tr -dc...` on MacOS behaves differently than on linux and the script creates an `error: illegal byte sequence` instead, but hey, we're running in docker on linux, and it's still weekend) - but it was fun to do. 
 
-I actually played around quite a bit with feeding ChatGPT with the schema reference of authzed spiceDB and the results were also quite likely, at least for simple schemas. But that's for another day. Hope you had fun reading this and have a great weekend!
+I actually played around quite a bit with feeding ChatGPT with the schema reference of authzed spiceDB and the results were also quite likely, at least for simple schemas. But that's for another day. Hope you had fun reading this. Have a great weekend!
 
+Off bouldering,
 Dom

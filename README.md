@@ -17,11 +17,12 @@ This is a highly experimental WIP PoC for now, so use at your own risk and defin
 ## example zed output:
 ![example zed output using the commands](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/zed_example_output.png?raw=true)
 
-
+## Using ChatGPT to get rid of annoying tasks
+read [CHATGPT_GENERATOR.md](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/CHATGPT_GENERATOR.md)
 # TODO:
 much more. as said highly experimental, dunno where to go with this, but it's fun ;)
 
 # Done
 1) extended to (experimentally) handle "add group" events
 2) extended to (experimentally) handle "group membership" events
-3) using ChatGPT to create myself a user generation script for keycloak. More about that [here](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/chatgpt_generator/CHATGPT_GENERATOR.md))
+3) using ChatGPT to create myself a user generation script for keycloak. More about that [here](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/CHATGPT_GENERATOR.md)
