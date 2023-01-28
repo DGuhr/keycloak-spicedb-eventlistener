@@ -12,9 +12,11 @@ COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
 COPY --from=builder /opt/keycloak/providers/ /opt/keycloak/providers/
 COPY ./initialize-poc.sh /opt/keycloak/bin
 COPY ./init.sh /opt/keycloak/bin
+COPY ./usergenerator.sh /opt/keycloak/bin
 
 USER root
 RUN chmod -R 554 /opt/keycloak/bin/initialize-poc.sh
 RUN chmod -R 554 /opt/keycloak/bin/init.sh
+RUN chmod -R 554 /opt/keycloak/bin/usergenerator.sh
 
 USER 1000
