@@ -1,17 +1,17 @@
 package io.dguhr.keycloak;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dguhr.keycloak.service.ServiceHandler;
 import io.dguhr.keycloak.event.SpiceDbEventParser;
 import org.jboss.logging.Logger;
 import org.keycloak.events.Event;
 import org.keycloak.events.EventListenerProvider;
 import org.keycloak.events.admin.AdminEvent;
+import org.keycloak.events.admin.OperationType;
+import org.keycloak.events.admin.ResourceType;
 import org.keycloak.models.KeycloakSession;
 
 public class SpiceDbEventListenerProvider implements EventListenerProvider {
 	private static final Logger LOG = Logger.getLogger(SpiceDbEventListenerProvider.class);
-	private ObjectMapper mapper;
 	private ServiceHandler service;
 	private KeycloakSession session;
 
@@ -19,7 +19,6 @@ public class SpiceDbEventListenerProvider implements EventListenerProvider {
 		LOG.info("[SpiceDbEventListener] SpiceDbEventListenerProvider initializing...");
 		this.service = service;
 		this.session = session;
-		mapper = new ObjectMapper();
 	}
 
 	@Override
@@ -30,19 +29,24 @@ public class SpiceDbEventListenerProvider implements EventListenerProvider {
 
 	@Override
 	public void onEvent(AdminEvent adminEvent, boolean includeRepresentation) {
-		LOG.info("[SpiceDbEventListener] onEvent Admin received events");
 
 		try {
-			LOG.infof("[SpiceDbEventListener] admin event: " + mapper.writeValueAsString(adminEvent));
+			if (isHandledEvent(adminEvent)) {
 			SpiceDbEventParser spiceDbEventParser = new SpiceDbEventParser(adminEvent, session);
-			LOG.infof("[SpiceDbEventListener] event received: " + spiceDbEventParser);
 			service.handle(adminEvent.getId(), spiceDbEventParser.toTupleEvent());
+			}
 		} catch (IllegalArgumentException e) {
 			LOG.warn(e.getMessage());
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private boolean isHandledEvent(AdminEvent event) { //TODO remove methods from parser, reevaluate approach
+		return event.getResourceType().equals(ResourceType.GROUP_MEMBERSHIP) && event.getOperationType().equals(OperationType.CREATE)
+				|| event.getResourceType().equals(ResourceType.GROUP) && event.getOperationType().equals(OperationType.CREATE)
+				|| event.getResourceType().equals(ResourceType.USER) && event.getOperationType().equals(OperationType.CREATE);
 	}
 
 	@Override

@@ -33,7 +33,7 @@ public class SpiceDbEventListenerProviderFactory implements EventListenerProvide
 	}
 
 	@Override
-	public void init(Scope config) {
+	public void init(Scope config) { //move to validateconfig?
 
 		this.serviceHandlerName = config.get("serviceHandlerName");
 		if (serviceHandlerName == null) {

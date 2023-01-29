@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class SpiceDbServiceHandler extends ServiceHandler {
     private static final Logger logger = Logger.getLogger(SpiceDbServiceHandler.class);
 
-    public SpiceDbServiceHandler(KeycloakSession session, Config.Scope config) {
+    public SpiceDbServiceHandler(KeycloakSession session, Config.Scope config) { //TODO : refactor getOrCreate - called everytime, should only once.
         super(session, config);
         getOrCreateSchema();
     }

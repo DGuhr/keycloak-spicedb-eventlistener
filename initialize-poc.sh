@@ -54,8 +54,8 @@ echo "Now that we simulate an orgs admin, we can let them create a group that sh
 /opt/keycloak/bin/kcadm.sh create groups -r master -s name=MyGroup
 
 echo "ok now lets add a user to the previously created group... in order to do that we need the userId and the groupId."
-echo "Username 1 is set to ${username1}"
-user1Uid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q username=$username1 --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
+
+user1Uid=$(/opt/keycloak/bin//kcadm.sh get users -r master -q email=$username1@demo.com --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
 myGroupUid=$(/opt/keycloak/bin//kcadm.sh get groups -r master -q name=MyGroup --fields=id | awk -F':' '{print $2}' | grep . | tr -d "\"" | sed -e 's/^[[:space:]]*//')
 /opt/keycloak/bin/kcadm.sh update users/$user1Uid/groups/$myGroupUid -r master -s realm=master -s userId=$user1Uid -s groupId=$myGroupUid -n
 

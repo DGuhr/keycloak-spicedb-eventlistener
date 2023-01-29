@@ -111,4 +111,4 @@ The ${username1} echo returns an empty result. help
 it gave me the actual correct response: use `source` you brat!
 ![q_and_a7](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/assets/q_and_a7.png?raw=true)
 
-So now the [script](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/aa6ace86bef29a483359691bc6e2eb8954b8c824/usergenerator.sh) and [calling it the working way](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/aa6ace86bef29a483359691bc6e2eb8954b8c824/initialize-poc.sh#L43-L44) and [getting the variable for making the group member adding call](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/aa6ace86bef29a483359691bc6e2eb8954b8c824/initialize-poc.sh#L57-L58) really works :) 
+So now the [script](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/usergenerator.sh) and [calling it the working way](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/initialize-poc.sh#L43-L44) and [getting the variable for making the group member adding call](https://github.com/DGuhr/keycloak-spicedb-eventlistener/blob/main/initialize-poc.sh#L57-L58) really works :) 
