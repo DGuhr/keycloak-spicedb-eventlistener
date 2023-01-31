@@ -19,9 +19,8 @@ import java.util.concurrent.TimeUnit;
 public class SpiceDbServiceHandler extends ServiceHandler {
     private static final Logger logger = Logger.getLogger(SpiceDbServiceHandler.class);
 
-    public SpiceDbServiceHandler(KeycloakSession session, Config.Scope config) { //TODO : refactor getOrCreate - called everytime, should only once.
+    public SpiceDbServiceHandler(KeycloakSession session, Config.Scope config) {
         super(session, config);
-        getOrCreateSchema();
     }
 
     @Override
@@ -56,90 +55,6 @@ public class SpiceDbServiceHandler extends ServiceHandler {
 
     private void addGroupMember(SpiceDbTupleEvent sdbEvent) {
         writeSpiceDbRelationship(sdbEvent);
-    }
-
-    private SchemaServiceOuterClass.ReadSchemaResponse getOrCreateSchema() {
-
-        ManagedChannel channel = ManagedChannelBuilder
-                .forTarget(config.get("spicedbHost") +":"+config.get("spicedbPort"))
-                .usePlaintext()
-                .build();
-
-        SchemaServiceGrpc.SchemaServiceBlockingStub schemaService = SchemaServiceGrpc.newBlockingStub(channel)
-                .withCallCredentials(new BearerToken(config.get("spicedbToken")));
-
-        SchemaServiceOuterClass.ReadSchemaRequest readRequest = SchemaServiceOuterClass.ReadSchemaRequest
-                .newBuilder()
-                .build();
-
-        SchemaServiceOuterClass.ReadSchemaResponse readResponse;
-
-        try {
-            readResponse = schemaService.readSchema(readRequest);
-        } catch (Exception e) {
-            //ugly but hey..
-            if(e.getMessage().contains("No schema has been defined")) {
-                logger.warn("No scheme there yet, creating initial one.");
-                writeSchema(schemaService, getInitialSchema());
-            } else {
-                throw new RuntimeException("connection to spicedb not available.");
-            }
-            return getOrCreateSchema();
-        } finally {
-            channel.shutdown();
-            try {
-                if (!channel.awaitTermination(3000, TimeUnit.MILLISECONDS)) {
-                    channel.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                channel.shutdownNow();
-            }
-        }
-        logger.info("Scheme found.");
-        return readResponse;
-    }
-
-    private String writeSchema(SchemaServiceGrpc.SchemaServiceBlockingStub schemaService, String schema) {
-        SchemaServiceOuterClass.WriteSchemaRequest request = SchemaServiceOuterClass.WriteSchemaRequest
-                .newBuilder()
-                .setSchema(schema)
-                .build();
-
-        SchemaServiceOuterClass.WriteSchemaResponse writeSchemaResponse;
-        try {
-            writeSchemaResponse = schemaService.writeSchema(request);
-        } catch (Exception e) {
-            logger.warn("Writing initial Schema failed!", e);
-            throw new RuntimeException(e);
-        }
-        logger.info("writeSchemaResponse: " + writeSchemaResponse.toString());
-        return writeSchemaResponse.toString();
-    }
-
-    private static String getInitialSchema() {
-
-        return "definition principal {}\n" +
-                "\n" +
-                "definition tenant {\n" +
-                "    relation member : principal\n" +
-                "    relation tenant_admin : principal\n" +
-                "    permission admin = tenant_admin\n" +
-                "}\n" +
-                "\n" +
-                "definition group {\n" +
-                "    relation parent : tenant | group\n" +
-                "    relation direct_member : principal\n" +
-                "    relation group_admin : principal\n" +
-                "\n" +
-                "    permission member = direct_member + group_admin + parent->admin\n" +
-                "    permission admin = group_admin + parent->admin\n" +
-                "}\n" +
-                "\n" +
-                "definition role {\n" +
-                "    relation assigned_group: group\n" +
-                "\n" +
-                "    permission member = assigned_group->member\n" +
-                "}";
     }
 
     private String writeSpiceDbRelationship(SpiceDbTupleEvent sdbEvent) {

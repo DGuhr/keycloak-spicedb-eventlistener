@@ -57,9 +57,11 @@ services:
         aliases:
           -  keycloak
   spicedb:
-    image: "authzed/spicedb"
-    command: "serve"
+    image: authzed/spicedb
+    command: "serve --datastore-bootstrap-files /var/lib/spicedb/initial/initial_schema.yml"
     restart: "always"
+    volumes:
+      - ./schema.yml:/var/lib/spicedb/initial/initial_schema.yml
     ports:
       - "8081:8080"
       - "9090:9090"

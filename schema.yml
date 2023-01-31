@@ -1,0 +1,26 @@
+schema: |-
+  definition principal {}
+
+  definition tenant {
+      relation member : principal
+      relation tenant_admin : principal
+      permission admin = tenant_admin
+  }
+
+  definition group {
+      relation parent : tenant | group
+      relation direct_member : principal
+      relation group_admin : principal
+
+      permission member = direct_member + group_admin + parent->admin
+      permission admin = group_admin + parent->admin
+  }
+
+  definition role {
+      relation assigned_group: group
+
+      permission member = assigned_group->member
+  }
+relationships: ""
+assertions: null
+validation: null
